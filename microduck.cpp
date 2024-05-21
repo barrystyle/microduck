@@ -64,6 +64,25 @@ static size_t WriteMemoryCallback(void* contents, size_t size, size_t nmemb, voi
     return realsize;
 }
 
+static bool ReturnValueFromJsonKey(char* buf, int bsz, char* key, int ksz, char* val)
+{
+    int cnt = 0;
+    while (++cnt < bsz) {
+        if (memcmp(buf + cnt, key, ksz) == 0 && memcmp(buf + cnt + ksz + 1, ":", 1) == 0) {
+            int icnt = 1;
+            while (memcmp(buf + cnt + ksz + 1 + icnt, ",", 1) != 0 && memcmp(buf + cnt + ksz + 1 + icnt, "}", 1) != 0) {
+                if (cnt + ksz + 1 + icnt >= bsz)
+                    return false;
+                val[icnt - 1] = buf[cnt + ksz + 1 + icnt];
+                ++icnt;
+            }
+            val[icnt] = 0;
+            return true;
+        }
+    }
+    return false;
+}
+
 static std::string BuildApiUrl() {
     std::string url;
     url = "https://duckdice.io/api/play?api_key=" + API_KEY;
@@ -112,14 +131,22 @@ bool PlaceBet(Bet& current, std::string& currency, int& errorRet, uint64_t& elap
         } else if (chunk.size == 0) {
             errorRet = EMPTYREPLY;
             return false;
-        } else if (chunk.size >= 16384) {
+        } else if (chunk.size >= 12288) {
             errorRet = CLOUDFLARE;
             return false;
         }
         curl_easy_cleanup(curl);
     }
 
-    printf("\n%s\n", chunk.memory);
+    //extract result
+    char jsonret[128];
+    memset(jsonret, 0, sizeof(jsonret));
+    char jsonkey[] = "result";
+    if (!ReturnValueFromJsonKey(chunk.memory, chunk.size, &jsonkey[0], 6, &jsonret[0])) {
+	printf("unknown-error\n");
+    } else {
+	printf("%s\n", jsonret);
+    }
 
     free(chunk.memory);
 
