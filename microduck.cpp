@@ -23,41 +23,45 @@ int main()
 
     uint64_t elapsed;
     srand(time(NULL));
-    double betpercent = 0.02;
-    std::string currency = "TON";
+    std::string currency = "LTC";
 
     while (true) {
 
         bool valid;
         int errorRet;
         int ishigh = rand() % 10;
-        betpercent = 30;
-        printf("%f %d\n", betpercent, ishigh);
+
+        double betpercent = 10.0 / (rand() % 100 + 1);
 
         //if (replay == -1)
         //    ishigh = replay;
 
         int resultRet;
+        double amount;
+        double percent;
         Bet current(LOW, 0.0, 50);
         if (ishigh >= 5) {
-            current = Bet(HIGH, 0.25, betpercent);
+            current = Bet(HIGH, 0.000125, betpercent);
             valid = PlaceBet(current, currency, resultRet, errorRet, elapsed);
+            amount = current.amount;
+            percent = current.percent;
         } else {
-            current = Bet(LOW, 0.25, betpercent);
+            current = Bet(LOW, 0.000125, betpercent);
             valid = PlaceBet(current, currency, resultRet, errorRet, elapsed);
+            amount = current.amount;
+            percent = current.percent;
         }
 
-        printf("bet %d %s and %s\n", 32, currency.c_str(), resultRet ? "won" : "lost");
+        printf("bet %0.8f %s (chance: %0.2f%) and %s (%dms)\n", amount, percent, currency.c_str(), resultRet ? "won" : "lost", valid ? elapsed : -1);
 
-        if (valid)
-            printf("bet in %dms\n", elapsed);
-        else
+        if (!valid) {
             printf("error: %s\n", ErrorLookup(errorRet).c_str());
+        }
 
-	if (resultRet)
-	    doubleUp = true;
-	else
-	    doubleUp = false;
+        if (resultRet)
+            doubleUp = true;
+        else
+            doubleUp = false;
 
         if (!valid)
             replay = ishigh;

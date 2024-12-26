@@ -72,7 +72,7 @@ bool PlaceBet(Bet& current, std::string& currency, int& resultRet, int& errorRet
     char jsonbuf[256];
     sprintf(jsonbuf, "{"
                      "   \"symbol\": \"%s\","
-                     "   \"chance\": \"%.8f\","
+                     "   \"chance\": \"%.2f\","
                      "   \"isHigh\": %s,"
                      "   \"amount\": \"%.8f\","
                      "   \"faucet\": %s"
