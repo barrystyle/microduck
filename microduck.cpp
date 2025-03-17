@@ -6,6 +6,8 @@
 #include <thread>
 #include <functional>
 
+#include <math.h>
+
 #include <config.h>
 #include <timer.h>
 #include <util.h>
@@ -16,35 +18,52 @@
 // barrystyle 2024
 //
 
+long long current_timestamp()
+{
+	long long milliseconds;
+	struct timespec te;
+
+	clock_gettime(CLOCK_REALTIME, &te);
+
+	milliseconds = 1000LL*te.tv_sec + round(te.tv_nsec/1e6);
+	return milliseconds;
+}
+
 void place_random_bet(int thr_id)
 {
     int replay;
     uint64_t elapsed;
-    srand(time(NULL));
-    std::string currency = "LTC";
+    int increment = 1;
+    srand(current_timestamp()+thr_id);
+    std::string currency = "XMR";
 
     while (true) {
 
+        usleep(1500000);
+
         bool valid;
         int errorRet;
-        int ishigh = rand() % 10;
+        int ishigh = 50 > (rand() % 100);
         if (replay != -1) {
             ishigh = replay;
         }
 
-        double betpercent = 10.0 / (rand() % 250 + 1);
+        double betpercent = 1.8;
 
         int resultRet;
         double amount;
         double percent;
-        Bet current(LOW, 0.0, 50);
-        if (ishigh >= 5) {
-            current = Bet(HIGH, 0.00001545, betpercent);
+
+        amount = 0.05;
+
+        Bet current(LOW, 0, 50);
+        if (ishigh == 1) {
+            current = Bet(HIGH, 0.001, betpercent);
             valid = PlaceBet(current, currency, resultRet, errorRet, elapsed);
             amount = current.amount;
             percent = current.percent;
         } else {
-            current = Bet(LOW, 0.00001545, betpercent);
+            current = Bet(LOW, 0.001, betpercent);
             valid = PlaceBet(current, currency, resultRet, errorRet, elapsed);
             amount = current.amount;
             percent = current.percent;
@@ -68,7 +87,7 @@ void place_random_bet(int thr_id)
     }
 }
 
-int max_thr = 4;
+int max_thr = 1;
 
 int main()
 {
@@ -92,7 +111,7 @@ int main()
             ++i;
         }
 
-        sleep(1);
+        usleep(100000);
     }
 
     curl_global_cleanup();
